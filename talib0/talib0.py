@@ -25,6 +25,9 @@ def nojit____atr_loop____(timeperiod,true_range):
 		avg_true_range.iloc[nn] = ( avg_true_range.iloc[nn-1]*(timeperiod-1)+true_range.iloc[nn] ) / timeperiod
 	return avg_true_range
 
+# --
+# -- this match stockcharts.com ATR (20251001,ATR([SPY,HR],14))
+# --
 def ATR(high_vals,low_vals,close_vals,timeperiod):
 	if(timeperiod>=len(close_vals)):
 		# --
@@ -97,4 +100,77 @@ def SAR(high,low,accel,max_accel):
 		psar.append(psar_0)
 		calc.append([ psar_b_0, psar_0, down_trend_0, extreme_pt_0, factor_0, psar_f_0 ])
 	return psar
+
+# --
+# -- MA
+# --
+def SMA(series,period):
+	return series.rolling(window=period).mean()
+
+def EMA(series,period):
+	# Calculate the smoothing factor (alpha)
+	# The 'span' parameter in pandas' ewm is often set equal to the 'period'
+	# and results in a decay factor (alpha) of 2 / (span + 1)
+	return series.ewm(span=period, adjust=False).mean()
+
+def MACD(series, short_period=12, long_period=26, signal_period=9):
+	# --
+	# -- 1. Calculate the MACD Line
+	# --
+	ema_short = EMA(series, short_period)
+	ema_long = EMA(series, long_period)
+	macd_line = ema_short - ema_long
+
+	# --
+	# -- 2. Calculate the Signal Line
+	# -- The Signal Line is the Exponential Moving Average of the MACD Line itself
+	# --
+	signal_line = EMA(macd_line, signal_period)
+
+	# --
+	# -- 3. Calculate the MACD Histogram
+	# -- The Histogram is the difference between the MACD Line and the Signal Line
+	# --
+	macd_histogram = macd_line - signal_line
+
+	# --
+	# -- Return all three components as a DataFrame
+	# --
+	df0 = pd.DataFrame({
+		'MACD' : macd_line,
+		'Signal' : signal_line,
+		'Histogram': macd_histogram,
+	})
+	return df0
+
+def MACDv(high, low, close, short_period=12, long_period=26, signal_period=9):
+	# --
+	# -- 1. Calculate the MACD Line
+	# --
+	atr_series = ATR(high,low,close,long_period)
+	ema_short = EMA(close, short_period)
+	ema_long = EMA(close, long_period)
+	macd_line = (ema_short - ema_long) / atr_series * 100.0
+
+	# --
+	# -- 2. Calculate the Signal Line
+	# -- The Signal Line is the Exponential Moving Average of the MACD Line itself
+	# --
+	signal_line = EMA(macd_line, signal_period)
+
+	# --
+	# -- 3. Calculate the MACD Histogram
+	# -- The Histogram is the difference between the MACD Line and the Signal Line
+	# --
+	macd_histogram = macd_line - signal_line
+
+	# --
+	# -- Return all three components as a DataFrame
+	# --
+	df0 = pd.DataFrame({
+		'MACD' : macd_line,
+		'Signal' : signal_line,
+		'Histogram': macd_histogram,
+	})
+	return df0
 

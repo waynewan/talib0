@@ -1,6 +1,6 @@
 from setuptools import setup
 setup(name='talib0',
-version='0.2.0.0',
+version='0.2.0.1.dev0',
 description='TA-Lib using numba',
 url='#',
 author='#',
